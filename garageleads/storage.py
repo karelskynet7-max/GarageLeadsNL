@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -117,8 +116,14 @@ class Storage:
     def purge_retention(self, retention_days: int = 30) -> int:
         cutoff = (datetime.utcnow() - timedelta(days=retention_days)).isoformat()
         with self._connect() as conn:
-            deleted_leads = conn.execute("DELETE FROM leads WHERE detected_at < ?", (cutoff,)).rowcount
-            conn.execute("DELETE FROM seen_hashes WHERE created_at < ?", (cutoff,))
+            deleted_leads = conn.execute(
+                "DELETE FROM leads WHERE detected_at < ?",
+                (cutoff,),
+            ).rowcount
+            conn.execute(
+                "DELETE FROM seen_hashes WHERE created_at < ?",
+                (cutoff,),
+            )
             return deleted_leads
 
     def list_leads(self, limit: int = 50) -> list[dict[str, Any]]:
@@ -136,4 +141,4 @@ class Storage:
     @staticmethod
     def hash_lead(source: str, title: str, url: str) -> str:
         raw = f"{source}|{title.strip()}|{url.strip()}".lower()
-        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        return __import__("hashlib").sha256(raw.encode("utf-8")).hexdigest()

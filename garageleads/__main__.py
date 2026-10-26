@@ -33,27 +33,27 @@ def run_once(config: dict) -> list[str]:
 
     found_urls: list[str] = []
 
-    if config.get("sources", {}).get("reddit", True):
-        reddit = RedditAdapter(
-            client_id=env.get("REDDIT_CLIENT_ID"),
-            client_secret=env.get("REDDIT_CLIENT_SECRET"),
-        )
-        leads = reddit.fetch()
-        for lead in leads:
-            processed = pipeline.process(lead)
-            if processed:
-                found_urls.append(processed.url)
-                print(f"[reddit] {processed.title} ({processed.score}) -> {processed.url}")
+    for adapter_name in ("reddit", "rss"):
+        if not config.get("sources", {}).get(adapter_name, True):
+            continue
 
-    if config.get("sources", {}).get("rss", True):
-        rss = RSSAdapter()
-        feeds = config.get("rss_feeds", [])
-        leads = rss.fetch(feeds)
-        for lead in leads:
-            processed = pipeline.process(lead)
-            if processed:
-                found_urls.append(processed.url)
-                print(f"[rss] {processed.title} ({processed.score}) -> {processed.url}")
+        if adapter_name == "reddit":
+            reddit = RedditAdapter(
+                client_id=env.get("REDDIT_CLIENT_ID"),
+                client_secret=env.get("REDDIT_CLIENT_SECRET"),
+            )
+            for lead in reddit.fetch():
+                processed = pipeline.process(lead)
+                if processed:
+                    found_urls.append(processed.url)
+                    print(f"[reddit] {processed.title} ({processed.score}) -> {processed.url}")
+        elif adapter_name == "rss":
+            rss = RSSAdapter()
+            for lead in rss.fetch(config.get("rss_feeds", [])):
+                processed = pipeline.process(lead)
+                if processed:
+                    found_urls.append(processed.url)
+                    print(f"[rss] {processed.title} ({processed.score}) -> {processed.url}")
 
     if config.get("telegram_enabled", False):
         token = env.get("TELEGRAM_BOT_TOKEN")
@@ -87,9 +87,9 @@ def command_run(args: argparse.Namespace) -> int:
         return 0
 
     print("Starting continuous monitoring (Ctrl+C to stop)...")
-    interval_seconds = int(config.get("check_interval_minutes", 10)) * 60
     import time
 
+    interval_seconds = int(config.get("check_interval_minutes", 10)) * 60
     while True:
         run_once(config)
         time.sleep(interval_seconds)
@@ -99,8 +99,7 @@ def command_list(args: argparse.Namespace) -> int:
     load_env_file()
     config = load_config()
     storage = build_storage(config.get("env", {}).get("DATA_DIR", "./data"))
-    rows = storage.list_leads(limit=20)
-    for row in rows:
+    for row in storage.list_leads(limit=20):
         print(f"{row['title']} | score={row['score']} | source={row['source']} | url={row['url']}")
     return 0
 
@@ -131,7 +130,7 @@ def command_add(args: argparse.Namespace) -> int:
     if processed:
         print(f"Added lead: {processed.title} (score={processed.score})")
     else:
-        print("Lead did not meet the threshold.")
+        print("Lead did not meet threshold.")
     return 0
 
 
@@ -151,6 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     leads_parser = subparsers.add_parser("leads", help="Lead management")
     leads_sub = leads_parser.add_subparsers(dest="leads_command", required=True)
+
     list_parser = leads_sub.add_parser("list", help="List stored leads")
     list_parser.set_defaults(handler=command_list)
 
@@ -158,15 +158,15 @@ def build_parser() -> argparse.ArgumentParser:
     purge_parser.set_defaults(handler=command_purge)
 
     add_parser = leads_sub.add_parser("add", help="Add a manual lead")
-    add_parser.add_argument("url", help="URL or source to ingest")
+    add_parser.add_argument("url")
     add_parser.add_argument("--title", default="Manual lead")
     add_parser.add_argument("--text", default="")
     add_parser.set_defaults(handler=command_add)
 
     config_parser = subparsers.add_parser("config", help="Configuration")
     config_sub = config_parser.add_subparsers(dest="config_command", required=True)
-    show_parser = config_sub.add_parser("show", help="Display config")
-    show_parser.set_defaults(handler=command_show_config)
+    show_config_parser = config_sub.add_parser("show", help="Show configuration")
+    show_config_parser.set_defaults(handler=command_show_config)
 
     return parser
 

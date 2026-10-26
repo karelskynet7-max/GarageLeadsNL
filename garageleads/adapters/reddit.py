@@ -20,7 +20,7 @@ class RedditAdapter:
         if self.client_id and self.client_secret:
             import base64
 
-            token = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode()
+            token = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode("utf-8")).decode("utf-8")
             headers["Authorization"] = f"Basic {token}"
         return headers
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import feedparser
 import httpx
 
 from ..filters import contains_any
@@ -24,28 +23,34 @@ class RSSAdapter:
                 with httpx.Client(headers={"User-Agent": self.user_agent}, timeout=20.0) as client:
                     response = client.get(url)
                     response.raise_for_status()
-                    parsed = feedparser.parse(response.text)
+                    text = response.text
+            except Exception:
+                continue
+
+            try:
+                import feedparser
+                parsed = feedparser.parse(text)
             except Exception:
                 continue
 
             for entry in parsed.entries:
                 title = entry.get("title", "Untitled")
-                text = entry.get("summary", title)
+                summary = entry.get("summary") or entry.get("description") or title
                 link = entry.get("link", "")
-                published = entry.get("published_parsed")
-                dt = datetime(*published[:6]) if published else None
+                published_parsed = entry.get("published_parsed")
+                published_at = datetime(*published_parsed[:6]) if published_parsed else None
                 leads.append(
                     Lead(
                         id=f"rss:{title}:{link}",
                         source="rss",
                         title=title,
-                        text=text,
+                        text=summary,
                         url=link,
-                        published_at=dt,
+                        published_at=published_at,
                         detected_at=datetime.utcnow(),
                         language="nl",
                         score=0,
-                        matched_keywords=contains_any(f"{title} {text}", ["monteur", "garage", "reparatie", "apk", "kapot", "storing"]),
+                        matched_keywords=contains_any(f"{title} {summary}", ["monteur", "garage", "reparatie", "apk", "kapot", "storing"]),
                     )
                 )
         return leads

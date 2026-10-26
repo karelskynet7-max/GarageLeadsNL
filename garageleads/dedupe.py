@@ -4,5 +4,10 @@ import hashlib
 
 
 def compute_hash(source: str, title: str, url: str) -> str:
-    raw = f"{source}|{title.strip()}|{url.strip()}".lower()
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    normalized = f"{source}|{title.strip()}|{url.strip()}".lower()
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def is_duplicate(storage, source: str, title: str, url: str) -> bool:
+    digest = compute_hash(source, title, url)
+    return storage.has_seen_hash(digest)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from .dedupe import compute_hash
 from .storage import Storage
@@ -14,7 +15,7 @@ class LeadPipeline:
     cities: list[str]
     threshold: int = 50
 
-    def process(self, lead):
+    def process(self, lead: Any) -> Any | None:
         from .scorer import score_lead
 
         score, matched, location = score_lead(
