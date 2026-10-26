@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
 from pathlib import Path
+from datetime import datetime, timedelta
 import sqlite3
 from typing import Any
 
@@ -59,7 +59,7 @@ class Storage:
                 """
             )
             conn.execute(
-                "INSERT OR IGNORE INTO settings(key, value) VALUES ('retention_days', '30')"
+                "INSERT OR IGNORE INTO settings(key, value) VALUES ('retention_days', '14')"
             )
 
     def add_lead(self, lead: Lead) -> None:
@@ -113,7 +113,7 @@ class Storage:
                 (key, value),
             )
 
-    def purge_retention(self, retention_days: int = 30) -> int:
+    def purge_retention(self, retention_days: int = 14) -> int:
         cutoff = (datetime.utcnow() - timedelta(days=retention_days)).isoformat()
         with self._connect() as conn:
             deleted_leads = conn.execute(

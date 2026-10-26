@@ -5,8 +5,6 @@ from datetime import datetime
 from .filters import (
     DUTCH_INCLUDE_KEYWORDS,
     DUTCH_NEGATIVE_KEYWORDS,
-    REQUEST_PATTERNS,
-    URGENT_PATTERNS,
     contains_any,
     is_dutch_like,
     location_match,
@@ -23,12 +21,18 @@ def score_lead(
     negative_keywords: list[str] | None = None,
     threshold: int = 50,
     published_at: datetime | None = None,
+    freshness_days: int = 14,
 ) -> tuple[int, list[str], str | None]:
     combined = f"{title} {text}"
     normalized = normalize_text(combined)
     include = include_keywords or DUTCH_INCLUDE_KEYWORDS
     negative = negative_keywords or DUTCH_NEGATIVE_KEYWORDS
     active_cities = cities or []
+
+    if published_at is not None:
+        age_days = (datetime.utcnow() - published_at).total_seconds() / 86400
+        if age_days > freshness_days:
+            return 0, [], None
 
     score = 0
     matched = contains_any(normalized, include)

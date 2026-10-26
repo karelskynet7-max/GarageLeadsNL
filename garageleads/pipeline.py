@@ -14,6 +14,7 @@ class LeadPipeline:
     negative_keywords: list[str]
     cities: list[str]
     threshold: int = 50
+    freshness_days: int = 14
 
     def process(self, lead: Any) -> Any | None:
         from .scorer import score_lead
@@ -26,6 +27,7 @@ class LeadPipeline:
             negative_keywords=self.negative_keywords,
             threshold=self.threshold,
             published_at=lead.published_at,
+            freshness_days=self.freshness_days,
         )
 
         lead.score = score

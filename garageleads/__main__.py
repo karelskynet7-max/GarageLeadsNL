@@ -23,12 +23,14 @@ def run_once(config: dict) -> list[str]:
     env = config.get("env", {})
     data_dir = env.get("DATA_DIR", "./data")
     storage = build_storage(data_dir)
+    freshness_days = int(config.get("freshness_days", config.get("retention_days", 14)))
     pipeline = LeadPipeline(
         storage=storage,
         keywords=config.get("keywords", DUTCH_INCLUDE_KEYWORDS),
         negative_keywords=config.get("negative_keywords", DUTCH_NEGATIVE_KEYWORDS),
         cities=config.get("cities", []),
         threshold=int(config.get("score_threshold", 50)),
+        freshness_days=freshness_days,
     )
 
     found_urls: list[str] = []
@@ -108,7 +110,7 @@ def command_purge(args: argparse.Namespace) -> int:
     load_env_file()
     config = load_config()
     storage = build_storage(config.get("env", {}).get("DATA_DIR", "./data"))
-    deleted = storage.purge_retention(int(config.get("retention_days", 30)))
+    deleted = storage.purge_retention(int(config.get("retention_days", 14)))
     print(f"Purged {deleted} lead records.")
     return 0
 
@@ -117,12 +119,14 @@ def command_add(args: argparse.Namespace) -> int:
     load_env_file()
     config = load_config()
     storage = build_storage(config.get("env", {}).get("DATA_DIR", "./data"))
+    freshness_days = int(config.get("freshness_days", config.get("retention_days", 14)))
     pipeline = LeadPipeline(
         storage=storage,
         keywords=config.get("keywords", DUTCH_INCLUDE_KEYWORDS),
         negative_keywords=config.get("negative_keywords", DUTCH_NEGATIVE_KEYWORDS),
         cities=config.get("cities", []),
         threshold=int(config.get("score_threshold", 50)),
+        freshness_days=freshness_days,
     )
 
     lead = ManualAdapter().from_url(args.url, title=args.title, text=args.text)

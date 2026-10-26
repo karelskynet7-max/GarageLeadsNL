@@ -47,7 +47,8 @@ cities:
   - Delft
 
 score_threshold: 50
-retention_days: 30
+retention_days: 14
+freshness_days: 14
 quiet_hours:
   start: "22:00"
   end: "08:00"
