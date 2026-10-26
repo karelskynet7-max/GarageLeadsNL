@@ -1,0 +1,62 @@
+keywords:
+  - monteur
+  - garage
+  - reparatie
+  - APK
+  - storing
+  - kapot
+  - pech
+  - onderhoud
+  - remmen
+  - motor
+  - versnellingsbak
+  - koppeling
+  - uitlaat
+  - accu
+  - banden
+  - olie
+  - koelvloeistof
+  - start niet
+  - check engine
+  - schade
+  - slepen
+
+negative_keywords:
+  - vacature
+  - sollicitatie
+  - verkoop
+  - te koop
+  - gevonden
+  - vermist
+  - hoeveel kost
+
+cities:
+  - Amsterdam
+  - Rotterdam
+  - Utrecht
+  - Den Haag
+  - Eindhoven
+  - Almere
+  - Groningen
+  - Breda
+  - Nijmegen
+  - Tilburg
+  - Haarlem
+  - Arnhem
+  - Enschede
+  - Delft
+
+score_threshold: 50
+retention_days: 14
+freshness_days: 14
+quiet_hours:
+  start: "22:00"
+  end: "08:00"
+sources:
+  reddit: true
+  rss: true
+  manual: true
+  b2b: false
+polite_delay_seconds: 1.2
+check_interval_minutes: 10
+telegram_enabled: false
